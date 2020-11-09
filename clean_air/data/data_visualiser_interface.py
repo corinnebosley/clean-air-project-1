@@ -3,31 +3,8 @@
 
 class DataVisuliserInterface:
 
-
-    def renderPlotOfObsDatasets(datasetList):
+    def render_obs(self):
         pass
 
-    def renderPlotOfModelGriddedDatasets(datasetList):
+    def render_gridded(self):
         pass
-
-    def renderModelGriddedDataset(dataset):
-        pass
-
-    def renderObservationalDataset(dataset):
-        pass
-
-
-
-
-
- #   def renderMapOfDataset(dataSubset, shapefile):
- #       pass
-
- #   def renderPlotOfDataset(dataSubset, latlong):
- #       pass
-
- #   def renderPlotOfDataset(dataSubset, gridbox):
- #       pass
-
- #   def renderPlotOfDataset(dataSubset, track):
- #       pass

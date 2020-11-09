@@ -1,47 +1,32 @@
 ##Data Visuliser Class to handle rendering of maps and plots##
 
-
-from DataHandling.DataVisuliserInterface import DataVisuliserInterface
+from .data_visuliser_interface import DataVisuliserInterface
 
 
 class DataVisuliser(DataVisuliserInterface):
+    def __init__(self, *datasets):
+        self.datasets = datasets #declare variable to hold a list of datasets
 
-
-    def __init__(self, datasetList [] ) #declare variable to hold a list of datasets
-        self.datasetList[] = datasetlist[]  ## Python syntax !!! want to just declare a list within class !
-
-    def renderPlotOfObsDatasets(datasetList):
+    def render_obs(self):
         # do Something
         pass
 
-    def renderPlotOfModelGriddedDatasets(datasetList):
+    def render_gridded(self, subsetter=None):
         # do Something
         pass
 
-    def renderModelGriddedDataset(dataset):
-        # do Something
-        pass
-
-    def renderObservationalDataset(dataset):
-        # do Something
-        #Example here for demo only
-        obsRender = new ObsDatasetRenderer;
-        obsRenderer.renderfunc(dataset);
-
-        pass
-
-    def _renderMapOfDataset(dataSubset, shapefile):
-        #doSomething
-        pass
-
-    def _renderPlotOfDataset(dataSubset, latlong):
+    def _render_gridded_point(self, latlon):
         # doSomething
         pass
 
-    def _renderPlotOfDataset(dataSubset, gridbox): #Func overloading not supported ??
+    def _render_gridded_poly(self, shapefile):
         # doSomething
         pass
 
-    def _renderPlotOfDataset(dataSubset, track): #Func overloading not supported ??
+    def _render_gridded_box(self, gridbox):
+        # doSomething
+        pass
+
+    def _render_gridded_track(self, track):
         # doSomething
         pass

@@ -3,26 +3,8 @@
 
 class DataDownloaderInterface:
 
-    def downloadObsDataset(datasetName, fileLocation):
+    def download_obs(self, name, path):
         pass
 
-    def downloadModelGridDataset(datasetName, filelocation):
+    def download_gridded(self, name, path):
         pass
-
-    def downloadObsDataset(datasetList): #Func overloading not supported ?
-        pass
-
-    def downloadModelGridDataset(datasetList): #Func overloading not supported ?
-        pass
-
- #   def downloadDataset(dataSubset, shapefile):
- #       pass
-
- #   def downloadDataset(dataSubset, latlong): #Func overloading not supported ?
- #       pass
-
- #   def downloadDataset(dataSubset, gridbox): #Func overloading not supported ?
- #       pass
-
- #   def downloadDataset(dataSubset, track): #Func overloading not supported ?
- #       pass
