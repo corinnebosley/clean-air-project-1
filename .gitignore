@@ -1,0 +1,7 @@
+# Compiled python
+__pycache__
+*.pyc
+
+# Protect against temporary/user-specific artefacts
+.idea
+venv
