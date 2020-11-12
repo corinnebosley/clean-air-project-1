@@ -1,0 +1,8 @@
+name: cap_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7
+  - iris=2.3
+  - datashader
+  - pandas
