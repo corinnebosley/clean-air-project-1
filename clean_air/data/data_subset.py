@@ -1,35 +1,70 @@
-# Object class to hold datasubsets
+"""
+Objects representing data subsets
+"""
 
-class DataSubset :
+class DataSubset():
+    def __new__(cls, *args, **kw):
+        """
+        Intercept creation of a DataSubset object, and defer to a more
+        specific type if possible.
+        """
+        if cls is DataSubset:
+            if "latlon" in kw:
+                return PointSubset(*args, **kw)
+            if "box" in kw:
+                return BoxSubset(*args, **kw)
+            if "track" in kw:
+                return TrackSubset(*args, **kw)
+            if "shape" in kw:
+                return ShapeSubset(*args, **kw)
+        return super().__new__(cls)
+
     def __init__(
         self,
         id,
         name,
-        path,
-        meta_id,
-        category,
-        start_time,
-        end_time,
-        subset_parameter,
-        shapefile=None,
-        latlon=None,
-        postcode=None,
-        gridbox=None,
-        track=None,
+        files,
+        category=None,
+        parameter=None,
+        start_time=None,
+        end_time=None,
     ):
-        #Assign this stuff
         self.id = id
         self.name = name
-        self.path = path
-        self.meta_id = meta_id
+        self.files = files
         self.category = category
+        self.parameter = parameter
         self.start_time = start_time
         self.end_time = end_time
-        self.subset_parameter = subset_parameter
-        # Can only have one of shapefile, latlon, gridbox, track, postcode.
-        # Include functionality to limit this..poss subclasses instead.
-        self.shapefile = shapefile
+
+class PointSubset(DataSubset):
+    """
+    A dataset with 0 spacial dimensions - a single point.
+    """
+    def __init__(self, *args, latlon, **kw):
+        super().__init__(*args, **kw)
         self.latlon = latlon
-        self.postcode = postcode
-        self.gridbox = gridbox
+
+class BoxSubset(DataSubset):
+    """
+    A dataset limited to an axis-aligned box.
+    """
+    def __init__(self, *args, box, **kw):
+        super().__init__(*args, **kw)
+        self.box = box
+
+class TrackSubset(DataSubset):
+    """
+    A dataset along a (possibly curved) line.
+    """
+    def __init__(self, *args, track, **kw):
+        super().__init__(*args, **kw)
         self.track = track
+
+class ShapeSubset(DataSubset):
+    """
+    A dataset cut down to an arbitrary polygonal area.
+    """
+    def __init__(self, *args, shape, **kw):
+        super().__init__(*args, **kw)
+        self.shape = shape
