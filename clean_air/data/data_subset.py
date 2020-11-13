@@ -2,6 +2,9 @@
 Objects representing data subsets
 """
 
+import iris
+
+
 class DataSubset():
     def __new__(cls, *args, **kw):
         """
@@ -36,6 +39,29 @@ class DataSubset():
         self.parameter = parameter
         self.start_time = start_time
         self.end_time = end_time
+
+        self._cube = None
+
+    def as_cube(self):
+        if self._cube is not None:
+            return self._cube
+
+        constraints = None
+        if self.parameter:
+            constraints = constraints & iris.Constraint(self.parameter)
+        if self.start_time:
+            constraints = constraints & iris.Constraint(
+                time=lambda cell: self.start_time <= cell.point
+            )
+        if self.end_time:
+            constraints = constraints & iris.Constraint(
+                time=lambda cell: cell.point < self.end_time
+            )
+
+        cube = iris.load_cube(self.files, constraints)
+
+        self._cube = cube
+        return self._cube
 
 class PointSubset(DataSubset):
     """
