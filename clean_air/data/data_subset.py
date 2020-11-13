@@ -72,7 +72,7 @@ class PointSubset(DataSubset):
     """
     def __init__(self, *args, latlon, **kw):
         super().__init__(*args, **kw)
-        self.latlon = latlon
+        self.latlon = tuple(latlon)
 
     def as_cube(self):
         if self._cube is not None:
@@ -101,7 +101,38 @@ class BoxSubset(DataSubset):
     """
     def __init__(self, *args, box, **kw):
         super().__init__(*args, **kw)
-        self.box = box
+        self.box = tuple(box)
+
+    def as_cube(self):
+        if self._cube is not None:
+            return self._cube
+
+        cube = super().as_cube()
+        xcoord, ycoord = util.cubes.get_xy_coords(cube)
+        xmin, ymin, xmax, ymax = self.box
+        y = iris.coords.CoordExtent(ycoord, ymin, ymax)
+
+        constraint = iris.Constraint(coord_values={
+            ycoord.name(): lambda cell: ymin <= cell.point <= ymax
+        })
+        if xcoord.units.modulus:
+            # ie there is modular arithmetic to worry about.
+            # This can be done by extracting with constraints, but it is
+            # more convenient to use cube.intersection, which additionally
+            # wraps points into the requested range.
+            cube = cube.extract(constraint)
+            cube = cube.intersection(
+                iris.coords.CoordExtent(xcoord, xmin, xmax)
+            )
+        else:
+            constraint &= iris.Constraint(coord_values={
+                xcoord.name(): lambda cell: xmin <= cell.point <= xmax
+            })
+            cube = cube.extract(constraint)
+
+        self._cube = cube
+        return self._cube
+
 
 class TrackSubset(DataSubset):
     """
