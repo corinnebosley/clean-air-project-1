@@ -4,6 +4,8 @@ Top-level module for rendering datasets.
 
 import matplotlib as mpl
 import datashader as ds
+import dask
+import dask.dataframe as dd
 import pandas as pd
 
 MODEL_DATA_PATH = "~cbosley/Projects/toybox/cap_sample_data/model/"
@@ -16,6 +18,6 @@ class ModelDatasetRenderer:
         self.dataset = dataset
 
     def render(self):
-        # call some nice drawing tools here and plot the details that you
-        # want to see in UI
+        # Need to know dimensionality of dataset here so that we know whether
+        # to call render_plot or render_map.
         pass
