@@ -4,6 +4,8 @@ Objects representing data subsets
 
 import iris
 
+from .. import util
+
 
 class DataSubset():
     def __new__(cls, *args, **kw):
@@ -63,6 +65,7 @@ class DataSubset():
         self._cube = cube
         return self._cube
 
+
 class PointSubset(DataSubset):
     """
     A dataset with 0 spacial dimensions - a single point.
@@ -70,6 +73,27 @@ class PointSubset(DataSubset):
     def __init__(self, *args, latlon, **kw):
         super().__init__(*args, **kw)
         self.latlon = latlon
+
+    def as_cube(self):
+        if self._cube is not None:
+            return self._cube
+
+        cube = super().as_cube()
+        try:
+            xcoord, ycoord = util.cubes.get_xy_coords(cube)
+            y, x = self.latlon
+            cube = cube.interpolate([(xcoord.name(), x),
+                                     (ycoord.name(), y)],
+                                    iris.analysis.Linear())
+        except iris.exceptions.CoordinateNotFoundError:
+            # This implies that the cube is missing an X or Y coord, which
+            # we will assume means that it already represents a single point,
+            # stored as attributes instead of coords
+            pass
+
+        self._cube = cube
+        return self._cube
+
 
 class BoxSubset(DataSubset):
     """
