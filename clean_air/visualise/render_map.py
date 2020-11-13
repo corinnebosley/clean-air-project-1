@@ -3,11 +3,9 @@ Module to create fabulous visualisations of maps from datasets of more
 than 2 dimensions.
 """
 
-import hvplot.xarray
+import hvplot.xarray  # noqa
 
 
-# NOTE: dask.dataframes can read csv, fwf, json, hdf, orc, parquet, table
-# and sql_table.
 class Map:
     """
     Class to process data and create a lovely map from it.
@@ -16,6 +14,10 @@ class Map:
         self.df = dataframe.load()
 
     def render(self, x_coord, y_coord, z_coord=None, time_coord=None):
+        # NOTE: Must have a a deployed Bokeh Server app or a deployed Panel
+        # app to be able to view these plots.
+        # NOTE: At this stage this is only displaying data points, without an
+        # actual map behind it yet.
         self.df.hvplot.points(x=x_coord, y=y_coord, datashade=True)
-        print('all ok so far...')
+
 
