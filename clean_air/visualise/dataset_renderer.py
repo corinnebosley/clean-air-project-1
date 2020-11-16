@@ -15,7 +15,7 @@ class DatasetRenderer:
 
         # Guess all possible dim coords here using iris object before loading
         # dataframe as xarray object:
-        for coord in self.dataset.dim_coords:
+        for coord in self.dataset.coords():
             axis = iris.util.guess_coord_axis(coord)
             if axis == 'X':
                 self.x_coord = coord.name()
@@ -24,13 +24,11 @@ class DatasetRenderer:
             elif axis == 'Z':
                 self.z_coord = coord.name()
             elif axis == 'T':
-                self.time_coord = coord.name()
+                self.t_coord = coord.name()
 
         # Now load dataset as xarray object as this can read netcdf format
         # and also use the hvplot method:
         self.dataframe = xarray.open_dataset(dataset)
-
-        # TODO: In unit tests, check at this point that the data is lazy.(??)
 
     def render(self):
         # Need to know dimensionality of dataset here so that we know whether

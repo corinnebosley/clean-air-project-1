@@ -2,7 +2,6 @@
 Integration tests for the dataset_renderer.py visualisations.
 """
 
-import clean_air
 import clean_air.visualise.dataset_renderer as dr
 
 MODEL_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/model/"
@@ -29,16 +28,16 @@ class TestDatasetRenderer:
         img = dr.DatasetRenderer(self.model_path)
         img.render()
 
-    def test_renderer_for_obs_data(self):
-        # NOTE: This test highlights the fact that iris cannot read csv files,
-        # but we need iris to identify coord axes before passing them to the
-        # renderer.  We will therefore need to write a converter as I haven't
-        # managed to find one yet.
-        # TODO: Write csv to nc converter:
-        # https://stackoverflow.com/questions/22933855/convert-csv-to-netcdf
-        # This test will fail until the converter is completed.
-        img = dr.DatasetRenderer(self.obs_path)
-        img.render()
+    # def test_renderer_for_obs_data(self):
+    #     # NOTE: This test highlights the fact that iris cannot read csv files,
+    #     # but we need iris to identify coord axes before passing them to the
+    #     # renderer.  We will therefore need to write a converter as I haven't
+    #     # managed to find one yet.
+    #     # TODO: Write csv to nc converter:
+    #     # https://stackoverflow.com/questions/22933855/convert-csv-to-netcdf
+    #     # This test will fail until the converter is completed.
+    #     img = dr.DatasetRenderer(self.obs_path)
+    #     img.render()
 
     def test_renderer_for_aircraft_data(self):
         img = dr.DatasetRenderer(self.aircraft_path)
