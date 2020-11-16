@@ -18,6 +18,8 @@ class Map:
         # app to be able to view these plots.
         # NOTE: At this stage this is only displaying data points, without an
         # actual map behind it yet.
+
+        # TODO: work out what to do when we have x and t coords as well
         self.df.hvplot.points(x=x_coord, y=y_coord, datashade=True)
 
 

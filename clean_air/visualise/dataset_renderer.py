@@ -36,6 +36,7 @@ class DatasetRenderer:
         # Start with two dimensions only, then add checks and amendments to
         # accommodate different dimensionalities:
         if len(self.dims) > 1:
+            self.img_type = 'map'
             render_map.Map(self.dataframe).render(self.x_coord,
                                                   self.y_coord)
         # else:
