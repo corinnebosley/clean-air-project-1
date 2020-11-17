@@ -3,11 +3,13 @@ Unit tests for dataset_renderer.py
 """
 
 import clean_air.visualise.dataset_renderer as dr
-from clean_air.visualise import render_map, render_plot
-import iris
+import pytest
 import xarray
 
 MODEL_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/model/"
+TIMESERIES_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/" \
+                  "timeseries/"
+SCALAR_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/scalar/"
 
 
 class TestDatasetRenderer:
@@ -27,8 +29,9 @@ class TestDatasetRenderer:
         # expect it to discover:
         assert self.initialised.x_coord == 'projection_x_coordinate'
         assert self.initialised.y_coord == 'projection_y_coordinate'
-        assert self.initialised.z_coord == 'height'
-        assert self.initialised.t_coord == 'time'
+        # height and time are scalar coords so will not be collected:
+        assert self.initialised.z_coord is None
+        assert self.initialised.t_coord is None
 
     def test_dataframe_is_xarray(self):
         # Check that the dataframe itself is an xarray object:
@@ -40,24 +43,29 @@ class TestRenderCall:
     Class to test 'render' method of DatasetRenderer
     """
     def setup_class(self):
-        self.data_path = MODEL_DATA_PATH + 'aqum_daily_daqi_mean_20200520.nc'
-#        self.multiple_dims = dr.DatasetRenderer(self.data_path).render()
-        # We need to test that we can make plots (instead of maps) if the
-        # number of dimension coordinates is less than 2, so we need to make a
-        # dataset with only 1 dim coord so that we can test the renderer's
-        # ability to determine the type of plot to produce:
-        tmp_cube = iris.load_cube(self.data_path)
-        self.y_slice = tmp_cube.extract(iris.Constraint(
-            projection_y_coordinate=-184000.00000))
-        # TODO: Determine the correct min values for the following coordinates:
-        # self.x_slice = tmp_cube.extract(iris.Constraint(
-        #     projection_x_coordinate=0))
-        # self.t_slice = tmp_cube.extract(iris.Constraint(time=0))
+        self.model_path = MODEL_DATA_PATH + 'aqum_daily_daqi_mean_20200520.nc'
+        self.timeseries_path = TIMESERIES_PATH + 'aqum_hourly_no2_modified.nc'
+        self.scalar_path = SCALAR_PATH + 'aqum_no2_modified.nc'
 
     def test_render_map(self):
-        # Check that if the data has more than 1 dimension coordinate, the
+        # Check that if the data has an x and a y coordinate, the
         # renderer chooses to create a map rather than a plot.
-        dframe = dr.DatasetRenderer(self.data_path)
+        dframe = dr.DatasetRenderer(self.model_path)
         dframe.render()
         assert dframe.img_type == 'map'
+
+    def test_render_timeseries(self):
+        # Check that if we have scalar x and y coordinates but a full time
+        # coord, the renderer will choose to make a timeseries:
+        dframe = dr.DatasetRenderer(self.timeseries_path)
+        dframe.render()
+        assert dframe.img_type == 'timeseries'
+
+    def test_render_error(self):
+        # Check that if all our coordinates end up set as None, then an
+        # error is raised.
+        dframe = dr.DatasetRenderer(self.scalar_path)
+        with pytest.raises(ValueError):
+            dframe.render()
+
 
