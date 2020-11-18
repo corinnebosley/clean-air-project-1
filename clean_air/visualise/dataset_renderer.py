@@ -46,7 +46,7 @@ class DatasetRenderer:
     def render(self):
         """
         Analyses the dimensionality of the dataset and then sends to
-        appropriate renderer in render_plot.py or render_map.py.
+        appropriate renderer in test_render_plot.py or test_render_map.py.
         """
         # If we have both an x-coord and y-coord then we can draw a map:
         if self.x_coord is not None and self.y_coord is not None:

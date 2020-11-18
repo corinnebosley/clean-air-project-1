@@ -1,5 +1,5 @@
 """
-Integration tests for render_map.py
+Integration tests for test_render_map.py
 """
 
 # NOTE: We currently can't render actual images using the technology we have
