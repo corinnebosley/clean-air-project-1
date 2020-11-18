@@ -3,11 +3,14 @@ Integration tests for the test_dataset_renderer.py visualisations.
 """
 
 import clean_air.visualise.dataset_renderer as dr
+import os
 
-MODEL_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/model/"
-OBS_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/obs/"
-AIRCRAFT_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/" \
-                     "aircraft/"
+MODEL_DATA_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
+                   "model/")
+OBS_DATA_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
+                 "obs/")
+AIRCRAFT_DATA_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
+                      "aircraft/")
 
 
 class TestDatasetRenderer:
@@ -16,10 +19,13 @@ class TestDatasetRenderer:
     """
 
     def setup_class(self):
-        self.model_path = MODEL_DATA_PATH + 'aqum_daily_daqi_mean_20200520.nc'
-        self.obs_path = OBS_DATA_PATH + 'ABD_2015.csv'
-        self.aircraft_path = AIRCRAFT_DATA_PATH + \
-            'clean_air_MOCCA_data_20200121_M265_v0.nc'
+        self.model_path = os.path.join(MODEL_DATA_PATH,
+                                       'aqum_daily_daqi_mean_20200520.nc')
+        self.obs_path = os.path.join(OBS_DATA_PATH,
+                                     'ABD_2015.csv')
+        self.aircraft_path = os.path.join(AIRCRAFT_DATA_PATH,
+                                          'clean_air_MOCCA_data_'
+                                          '20200121_M265_v0.nc')
 
     def test_renderer_for_model_data(self):
         img = dr.DatasetRenderer(self.model_path)
