@@ -1,5 +1,5 @@
 """
-Integration tests for the dataset_renderer.py visualisations.
+Integration tests for the test_dataset_renderer.py visualisations.
 """
 
 import clean_air.visualise.dataset_renderer as dr
@@ -12,7 +12,7 @@ AIRCRAFT_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/" \
 
 class TestDatasetRenderer:
     """
-    Class to test integration properties of dataset_renderer.py
+    Class to test integration properties of test_dataset_renderer.py
     """
 
     def setup_class(self):

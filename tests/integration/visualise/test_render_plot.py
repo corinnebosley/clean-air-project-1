@@ -1,5 +1,5 @@
 """
-Integration tests for render_plot.py
+Integration tests for test_render_plot.py
 """
 
 # NOTE: We currently can't render actual images using the technology we have

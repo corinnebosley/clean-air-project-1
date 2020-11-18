@@ -1,5 +1,5 @@
 """
-Unit tests for dataset_renderer.py
+Unit tests for test_dataset_renderer.py
 """
 
 import clean_air.visualise.dataset_renderer as dr
