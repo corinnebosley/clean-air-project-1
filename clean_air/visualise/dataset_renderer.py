@@ -16,28 +16,18 @@ class DatasetRenderer:
         # Guess all possible dim coords here using iris object before loading
         # dataframe as xarray object (but scalar coords become None because we
         # can't make plots out of them):
+        self.x_coord = self.y_coord = self.z_coord = self.t_coord = None
         for coord in self.dataset.coords():
-            axis = iris.util.guess_coord_axis(coord)
-            if axis == 'X':
-                if len(coord.points) > 1:
+            if len(coord.points) > 1:
+                axis = iris.util.guess_coord_axis(coord)
+                if axis == 'X' and self.x_coord is None:
                     self.x_coord = coord.name()
-                else:
-                    self.x_coord = None
-            elif axis == 'Y':
-                if len(coord.points) > 1:
+                elif axis == 'Y' and self.y_coord is None:
                     self.y_coord = coord.name()
-                else:
-                    self.y_coord = None
-            elif axis == 'Z':
-                if len(coord.points) > 1:
+                elif axis == 'Z' and self.z_coord is None:
                     self.z_coord = coord.name()
-                else:
-                    self.z_coord = None
-            elif axis == 'T':
-                if len(coord.points) > 1:
+                elif axis == 'T' and self.t_coord is None:
                     self.t_coord = coord.name()
-                else:
-                    self.t_coord = None
 
         # Now load dataset as xarray object as this can read netcdf format
         # and also use the hvplot method:

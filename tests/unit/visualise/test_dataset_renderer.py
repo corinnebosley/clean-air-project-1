@@ -3,13 +3,16 @@ Unit tests for test_dataset_renderer.py
 """
 
 import clean_air.visualise.dataset_renderer as dr
+import os
 import pytest
 import xarray
 
-MODEL_DATA_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/model/"
-TIMESERIES_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/" \
-                  "timeseries/"
-SCALAR_PATH = "/net/home/h06/cbosley/Projects/toybox/cap_sample_data/scalar/"
+MODEL_DATA_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
+                   "model/")
+TIMESERIES_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
+                   "timeseries/")
+SCALAR_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
+               "scalar/")
 
 
 class TestDatasetRenderer:
@@ -17,7 +20,8 @@ class TestDatasetRenderer:
     Class to test object initialisation in DatasetRenderer
     """
     def setup_class(self):
-        self.data_path = MODEL_DATA_PATH + 'aqum_daily_daqi_mean_20200520.nc'
+        self.data_path = os.path.join(MODEL_DATA_PATH,
+                                      'aqum_daily_daqi_mean_20200520.nc')
         self.initialised = dr.DatasetRenderer(self.data_path)
 
     def test_lazy_iris_data(self):
@@ -43,9 +47,12 @@ class TestRenderCall:
     Class to test 'render' method of DatasetRenderer
     """
     def setup_class(self):
-        self.model_path = MODEL_DATA_PATH + 'aqum_daily_daqi_mean_20200520.nc'
-        self.timeseries_path = TIMESERIES_PATH + 'aqum_hourly_no2_modified.nc'
-        self.scalar_path = SCALAR_PATH + 'aqum_no2_modified.nc'
+        self.model_path = os.path.join(MODEL_DATA_PATH,
+                                       'aqum_daily_daqi_mean_20200520.nc')
+        self.timeseries_path = os.path.join(TIMESERIES_PATH,
+                                            'aqum_hourly_no2_modified.nc')
+        self.scalar_path = os.path.join(SCALAR_PATH,
+                                        'aqum_no2_modified.nc')
 
     def test_render_map(self):
         # Check that if the data has an x and a y coordinate, the
