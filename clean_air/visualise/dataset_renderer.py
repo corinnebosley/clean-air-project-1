@@ -2,15 +2,17 @@
 Top-level module for rendering datasets.
 """
 
+import geopandas
 import iris
 import xarray
 from clean_air.visualise import render_map, render_plot
 
 
 class DatasetRenderer:
-    def __init__(self, dataset):
+    def __init__(self, dataset_path):
         # Use iris to read in dataset as lazy array here:
-        self.dataset = iris.load_cube(dataset)
+        self.path = dataset_path
+        self.dataset = iris.load_cube(dataset_path)
         self.dims = self.dataset.dim_coords
 
         # Guess all possible dim coords here using iris object before loading
@@ -29,10 +31,6 @@ class DatasetRenderer:
                 elif axis == 'T' and self.t_coord is None:
                     self.t_coord = coord.name()
 
-        # Now load dataset as xarray object as this can read netcdf format
-        # and also use the hvplot method:
-        self.dataframe = xarray.open_dataset(dataset)
-
     def render(self):
         """
         Analyses the dimensionality of the dataset and then sends to
@@ -41,6 +39,7 @@ class DatasetRenderer:
         # If we have both an x-coord and y-coord then we can draw a map:
         if self.x_coord is not None and self.y_coord is not None:
             self.img_type = 'map'
+            self.dataframe = geopandas.read_file(self.path)
             render_map.Map(self.dataframe).render(self.x_coord,
                                                   self.y_coord,
                                                   self.z_coord,
@@ -48,6 +47,7 @@ class DatasetRenderer:
         # If we have just a time coord then we can make a timeseries:
         elif self.x_coord is None and self.y_coord is None:
             self.img_type = 'timeseries'
+            self.dataframe = xarray.open_dataset(self.path)
             render_plot.Plot(self.dataframe).render_timeseries()
         # If we don't have any coords then something's gone wrong and we can't
         # plot anything:
