@@ -4,7 +4,7 @@ Objects representing data subsets
 
 import iris
 
-from .. import util
+from clean_air import util
 
 
 class DataSubset():
@@ -108,27 +108,7 @@ class BoxSubset(DataSubset):
             return self._cube
 
         cube = super().as_cube()
-        xcoord, ycoord = util.cubes.get_xy_coords(cube)
-        xmin, ymin, xmax, ymax = self.box
-        y = iris.coords.CoordExtent(ycoord, ymin, ymax)
-
-        constraint = iris.Constraint(coord_values={
-            ycoord.name(): lambda cell: ymin <= cell.point <= ymax
-        })
-        if xcoord.units.modulus:
-            # ie there is modular arithmetic to worry about.
-            # This can be done by extracting with constraints, but it is
-            # more convenient to use cube.intersection, which additionally
-            # wraps points into the requested range.
-            cube = cube.extract(constraint)
-            cube = cube.intersection(
-                iris.coords.CoordExtent(xcoord, xmin, xmax)
-            )
-        else:
-            constraint &= iris.Constraint(coord_values={
-                xcoord.name(): lambda cell: xmin <= cell.point <= xmax
-            })
-            cube = cube.extract(constraint)
+        cube = util.cubes.extract_box(cube, self.box)
 
         self._cube = cube
         return self._cube
@@ -142,6 +122,7 @@ class TrackSubset(DataSubset):
         super().__init__(*args, **kw)
         self.track = track
 
+
 class ShapeSubset(DataSubset):
     """
     A dataset cut down to an arbitrary polygonal area.
@@ -149,3 +130,17 @@ class ShapeSubset(DataSubset):
     def __init__(self, *args, shape, **kw):
         super().__init__(*args, **kw)
         self.shape = shape
+
+    def as_cube(self):
+        if self._cube is not None:
+            return self._cube
+
+        # Extract bounding box
+        cube = super().as_cube()
+        cube = util.cubes.extract_box(cube, self.shape.bounds)
+
+        # Mask points outside the actual shape
+        ...
+
+        self._cube = cube
+        return self._cube
