@@ -2,7 +2,11 @@
 Helper functions for Iris Cubes
 """
 
+import itertools
+
+import numpy as np
 import iris
+import shapely
 
 
 def get_xy_coords(cube):
@@ -72,3 +76,53 @@ def extract_box(cube, box):
         cube = cube.extract(constraint)
 
     return cube
+
+
+def get_intersection_weights(cube, geom, match_cube_dims=False):
+    """
+    Calculate what proportion of each grid cell intersects a given shape.
+
+    Arguments:
+        cube (Cube): cube defining a grid
+        geom (BaseGeometry): shape to intersect
+        match_cube_dims (bool?):
+            Whether to match cube shape or not:
+
+            - If False (the default), the returned array will have shape (x, y)
+            - If True, its shape will be compatible with the cube
+
+    Returns:
+        (np.array): intersection weights
+    """
+    # Determine output shape
+    xcoord, ycoord = get_xy_coords(cube)
+    ndim = 2
+    xdim = 0
+    ydim = 1
+    if match_cube_dims:
+        # Make broadcastable to cube shape
+        ndim = cube.ndim
+        xdim = cube.coord_dims(xcoord)[0]
+        ydim = cube.coord_dims(ycoord)[0]
+    shape = [1] * ndim
+    shape[xdim] = len(xcoord.points)
+    shape[ydim] = len(ycoord.points)
+
+    # Calculate the weights
+    # TODO:
+    # - consider looping over only the bounding box of the geometry.
+    #   Currently, if the cube is much larger than the shape, the loop
+    #   itself vastly outweighs any actual intersection calculations.
+    # - investigate parallelisation. Would reduce the above need for using
+    #   bounding boxes, and is likely the only way of achieving any speed
+    #   up for large complex shapes at all.
+    weights = np.zeros(shape)
+    indices = [range(n) for n in shape]
+    for i in itertools.product(*indices):
+        x0, x1 = xcoord.bounds[i[xdim]]
+        y0, y1 = ycoord.bounds[i[ydim]]
+        cell = shapely.geometry.box(x0, y0, x1, y1)
+        weight = cell.intersection(geom).area / cell.area
+        weights[i] = weight
+
+    return weights

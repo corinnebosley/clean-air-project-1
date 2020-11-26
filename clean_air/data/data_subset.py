@@ -2,6 +2,7 @@
 Objects representing data subsets
 """
 
+import numpy as np
 import iris
 
 from clean_air import util
@@ -135,12 +136,28 @@ class ShapeSubset(DataSubset):
         if self._cube is not None:
             return self._cube
 
-        # Extract bounding box
         cube = super().as_cube()
+
+        # The cells must have bounds for shape intersections to have much
+        # meaning, especially for shapes that are small compared to the
+        # grid size
+        xcoord, ycoord = util.cubes.get_xy_coords(cube)
+        if not xcoord.has_bounds():
+            xcoord.guess_bounds()
+        if not ycoord.has_bounds():
+            ycoord.guess_bounds()
+
+        # Extract bounding box
         cube = util.cubes.extract_box(cube, self.shape.bounds)
 
         # Mask points outside the actual shape
-        ...
+        # Note we need to do the broadcasting manually: numpy is strangely
+        # reluctant to do it, no matter which of the many ways of creating
+        # a masked array we try
+        weights = util.cubes.get_intersection_weights(cube, self.shape, True)
+        mask = np.broadcast_to(weights == 0, cube.shape)
+        data = np.ma.array(cube.data, mask=mask)
+        cube = cube.copy(data=data)
 
         self._cube = cube
         return self._cube
