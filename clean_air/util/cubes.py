@@ -52,6 +52,7 @@ def extract_box(cube, box):
                 # this is just a < low < high < b
                 return a <= high and low <= b
             return low <= cell.point <= high
+
         return cb
 
     xcoord, ycoord = get_xy_coords(cube)
