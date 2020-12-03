@@ -22,8 +22,11 @@ class TestCubeToDataframe:
         self.dataset_path = os.path.join(PATH, "aqum_hourly_so2.nc")
         self.cube = iris.load_cube(self.dataset_path)
 
-    def test_conversion(self):
-        geodf = dc.CubeToGeodataframe(self.cube).convert_to_df
+    def test_convert_to_geodataframe(self):
+        gdf = dc.CubeToDataframe(self.cube).convert_to_geodf()
+        assert isinstance(gdf, geopandas.GeoDataFrame)
 
-        # assert isinstance(geodf, geopandas.GeoDataFrame)
-        assert isinstance(geodf, pandas.DataFrame)
+    def test_convert_to_geodataframe_set(self):
+        gdfs = dc.CubeToDataframe(self.cube).convert_to_geodf(restitch=False)
+        for gdf in gdfs:
+            assert isinstance(gdf, geopandas.GeoDataFrame)
