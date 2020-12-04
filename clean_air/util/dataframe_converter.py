@@ -3,15 +3,22 @@ This module contains functions to convert between dataframe types.
 """
 
 from clean_air.util.cubes import get_xy_coords
-from iris.util import guess_coord_axis
 from iris.pandas import _assert_shared, _as_pandas_coord, as_data_frame
 import numpy as np
 import pandas as pd
 from geopandas import GeoDataFrame
 from shapely.geometry import Point
+import warnings
 
 
 def as_pandas_data(data, copy=True):
+    """
+    Sort iris cube style data into pandas style data.
+    :param data: Data array to be converted.
+    :param copy: Boolean value representing whether the data should be copied.
+    or not (this will return an error if the array is masked).
+    :return: Data array in pandas format.
+    """
     if isinstance(data, np.ma.MaskedArray):
         if not copy:
             raise ValueError("Masked arrays must always be copied.")
@@ -37,7 +44,6 @@ def as_series(cube, index=None, copy=True):
     # It is as yet untested and unfinished; pulled from iris but in need of
     # simplification and modification.
     data = as_pandas_data(cube.data)
-
     if not index:
         if cube.dim_coords:
             index = _as_pandas_coord(cube.dim_coords[0])
@@ -51,82 +57,81 @@ def as_series(cube, index=None, copy=True):
     return series
 
 
-class CubeToDataframe:
+def _make_geo(cube, x_coord, y_coord):
     """
-    Class to convert iris-type cubes to pandas-type dataframes.
+    Helper function for conversion to geodataframe(s)
+    :param cube: cube for conversion
+    :param x_coord: iris dim coord representing x direction
+    :param y_coord: iris dim coord representing y direction
+    :return: list of geodataframes
     """
-    def __init__(self, cube):
-        self.cube = cube
-        self.dims = cube.dim_coords
-        # TODO: modify this to use Barnaby's method of getting xy coords,
-        #  which is much shorter and quicker.
-        for coord in self.cube.coords():
-            axis = guess_coord_axis(coord)
-            if axis == 'X':
-                self.x_coord = coord
-            elif axis == 'Y':
-                self.y_coord = coord
+    dataframes = []
+    for sub_cube in cube.slices([x_coord, y_coord]):
+        # Get the coordinates, data and geometry in the right
+        # order here:
+        x_coords_pd = []
+        y_coords_pd = []
+        data_pd = []
+        geom = []
+        i = j = 0
+        for x in x_coord.points:
+            for y in y_coord.points:
+                x_coords_pd.append(x)
+                y_coords_pd.append(y)
+                data_pd.append(sub_cube.data[i, j])
+                geom.append(Point(x, y))
+                # i and j represent the index values of the coords, so
+                # they need to stop counting at the end of the coords.
+                if j < len(y_coord.points) - 1:
+                    j += 1
+            if i < len(x_coord.points) - 1:
+                i += 1
 
-    def convert_to_geodf(self, restitch=True):
-        # Iris function iris.pandas.as_data_frame will only convert a
-        # 2D cube into a dataframe, so first make sure all data for conversion
-        # is sliced into 2D slices:
+        # Now construct pandas dataframe object for this sub_cube:
+        pandas_df = pd.DataFrame({'x_coord': x_coords_pd,
+                                  'y_coord': y_coords_pd,
+                                  'data': data_pd})
 
-        if len(self.dims) > 2:
-            # If there are more than two coords, we need to look for standard
-            # xy dimension coords and use them to slice the cube up:
-            dataframes = []
-            for sub_cube in self.cube.slices([self.x_coord, self.y_coord]):
-                # Get the coordinates, data and geometry in the right
-                # order here:
-                self.x_coords_pd = []
-                self.y_coords_pd = []
-                self.data_pd = []
-                self.geom = []
-                i = j = 0
-                for x in self.x_coord.points:
-                    for y in self.y_coord.points:
-                        self.x_coords_pd.append(x)
-                        self.y_coords_pd.append(y)
-                        # TODO: Handle masked data somehow?
-                        #  (identify with fill_value if need be)
-                        self.data_pd.append(sub_cube.data[i, j])
-                        self.geom.append(Point(x, y))
-                        # i and j represent the index values of the coords, so
-                        # they need to stop counting at the end of the coords.
-                        if j < len(self.y_coord.points) - 1:
-                            j += 1
-                    if i < len(self.x_coord.points) - 1:
-                        i += 1
-                # Now construct pandas dataframe object:
-                pandas_df = pd.DataFrame({
-                    'x_coord': self.x_coords_pd,
-                    'y_coord': self.y_coords_pd,
-                    'data': self.data_pd
-                })
+        # Then make geometry in correct form (which is a list of
+        # shapely.geometry.Points objects) and convert to GeoDataFrame:
+        geo_df = GeoDataFrame(pandas_df, geometry=geom)
+        dataframes.append(geo_df)
 
-                # Now make geometry in correct form (which is a list of
-                # shapely.geometry.Points objects)
-                geo_df = GeoDataFrame(pandas_df, geometry=self.geom)
-                dataframes.append(geo_df)
+    return dataframes
 
-            # Now we have a set of 2D geopandas dataframes which must be
-            # stitched back together if required
-            if restitch:
-                geodataframe = pd.concat(dataframes)
-        elif len(self.dims) < 2:
-            raise ValueError("Only 2D cubes can be converted to dataframes,"
-                             "this cube appears to have only {} dimension."
-                             "We can slice up cubes with more than 2 "
-                             "dimensions, but we can't give them more "
-                             "dimensions if they don't have enough.".format
-                             (len(self.dims)))
-        else:
-            dataframe = as_data_frame(self.cube)
-            geodataframe = GeoDataFrame(dataframe, geometry=self.geom)
 
-        if len(self.dims) > 2 and not restitch:
-            return dataframes
-        else:
+def convert_to_geodf(cube, restitch=True):
+    # TODO: Replace this comment with a docstring
+    # Iris function iris.pandas.as_data_frame will only convert a
+    # 2D cube into a dataframe, so first make sure all data for conversion
+    # is sliced into 2D slices:
+    geodataframes = series = geodataframe = None
+    if len(cube.dim_coords) == 2:
+        restitch = False
+
+    # For cubes with more than two dim coords:
+    if len(cube.dim_coords) >= 2:
+        x_coord, y_coord = get_xy_coords(cube)
+        # If there are more than two coords, we need to look for standard
+        # xy dimension coords and use them to slice the cube up:
+        geodataframes = _make_geo(cube, x_coord, y_coord)
+
+        # Now we have a set of 2D geopandas dataframes which must be
+        # stitched back together if required
+        if restitch:
+            geodataframe = pd.concat(geodataframes)
+
+    # For cubes with less than 2 dim coords (warn then convert to series):
+    elif len(cube.dim_coords) < 2:
+        warnings.warn("Converting to non-geographical series instead of "
+                      "geodataframe as there is only one coordinate.")
+        series = as_series(cube)
+
+    if len(cube.dim_coords) >= 2:
+        if restitch is True:
             return geodataframe
+        else:
+            return geodataframes
+    elif len(cube.dim_coords) < 2:
+        return series
 
