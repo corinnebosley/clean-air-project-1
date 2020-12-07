@@ -66,22 +66,24 @@ def _make_geo(cube, x_coord, y_coord):
     :return: list of geodataframes
     """
     dataframes = []
-    for sub_cube in cube.slices([x_coord, y_coord]):
+    for sub_cube in cube.slices([x_coord, y_coord], ordered=True):
         # Get the coordinates, data and geometry in the right
         # order here:
         x_coords_pd = []
         y_coords_pd = []
         data_pd = []
         geom = []
-        i = j = 0
+        i = 0
         for x in x_coord.points:
+            # Reset the y-coord index to 0 each time we loop over the x-coord:
+            j = 0
             for y in y_coord.points:
                 x_coords_pd.append(x)
                 y_coords_pd.append(y)
                 data_pd.append(sub_cube.data[i, j])
                 geom.append(Point(x, y))
                 # i and j represent the index values of the coords, so
-                # they need to stop counting at the end of the coords.
+                # they need to stop counting at the end of the coord arrays.
                 if j < len(y_coord.points) - 1:
                     j += 1
             if i < len(x_coord.points) - 1:
@@ -101,10 +103,19 @@ def _make_geo(cube, x_coord, y_coord):
 
 
 def convert_to_geodf(cube, restitch=True):
-    # TODO: Replace this comment with a docstring
-    # Iris function iris.pandas.as_data_frame will only convert a
-    # 2D cube into a dataframe, so first make sure all data for conversion
-    # is sliced into 2D slices:
+    """
+    Callable for converting iris-style cubes into geopandas dataframes.
+
+    Note: This conversion is only possible for 2-dimensional cubes, so input
+    cubes with more than two dimensions will be sliced up before conversion
+    and then restitched if necessary.  Cubes with less than two dimensions
+    will be converted to a series instead.
+
+    :param cube: input cube.
+    :param restitch: Boolean representing whether to concatenate the
+    dataframes after conversion to pandas arrays.
+    :return: pandas-style dataframe(s) or series, depending on input (see note).
+    """
     geodataframes = series = geodataframe = None
     if len(cube.dim_coords) == 2:
         restitch = False
