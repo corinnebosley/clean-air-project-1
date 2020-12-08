@@ -43,6 +43,10 @@ class TestConvertToGeoDF:
         gdf = dc.convert_to_geodf(self.doubledim_cube, restitch=False)
         assert isinstance(gdf[0], geopd.GeoDataFrame)
 
+    def test_2d_cube_restitch(self):
+        gdf = dc.convert_to_geodf(self.doubledim_cube, restitch=True)
+        assert isinstance(gdf, geopd.GeoDataFrame)
+
     def test_1d_cube_series(self):
         gs = dc.convert_to_geodf(self.onedim_cube)
         assert isinstance(gs, pd.Series)
