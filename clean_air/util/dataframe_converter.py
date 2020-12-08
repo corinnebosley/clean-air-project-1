@@ -102,7 +102,7 @@ def _make_geo(cube, x_coord, y_coord):
     return dataframes
 
 
-def convert_to_geodf(cube, restitch=True):
+def convert_to_geodf(cube, restitch=False):
     """
     Callable for converting iris-style cubes into geopandas dataframes.
 
