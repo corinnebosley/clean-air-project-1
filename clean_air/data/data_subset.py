@@ -2,9 +2,10 @@
 Objects representing data subsets
 """
 
+import numpy as np
 import iris
 
-from .. import util
+from clean_air import util
 
 
 class DataSubset():
@@ -108,27 +109,7 @@ class BoxSubset(DataSubset):
             return self._cube
 
         cube = super().as_cube()
-        xcoord, ycoord = util.cubes.get_xy_coords(cube)
-        xmin, ymin, xmax, ymax = self.box
-        y = iris.coords.CoordExtent(ycoord, ymin, ymax)
-
-        constraint = iris.Constraint(coord_values={
-            ycoord.name(): lambda cell: ymin <= cell.point <= ymax
-        })
-        if xcoord.units.modulus:
-            # ie there is modular arithmetic to worry about.
-            # This can be done by extracting with constraints, but it is
-            # more convenient to use cube.intersection, which additionally
-            # wraps points into the requested range.
-            cube = cube.extract(constraint)
-            cube = cube.intersection(
-                iris.coords.CoordExtent(xcoord, xmin, xmax)
-            )
-        else:
-            constraint &= iris.Constraint(coord_values={
-                xcoord.name(): lambda cell: xmin <= cell.point <= xmax
-            })
-            cube = cube.extract(constraint)
+        cube = util.cubes.extract_box(cube, self.box)
 
         self._cube = cube
         return self._cube
@@ -142,6 +123,7 @@ class TrackSubset(DataSubset):
         super().__init__(*args, **kw)
         self.track = track
 
+
 class ShapeSubset(DataSubset):
     """
     A dataset cut down to an arbitrary polygonal area.
@@ -149,3 +131,34 @@ class ShapeSubset(DataSubset):
     def __init__(self, *args, shape, **kw):
         super().__init__(*args, **kw)
         self.shape = shape
+
+
+    def as_cube(self):
+        if self._cube is not None:
+            return self._cube
+
+        cube = super().as_cube()
+
+        # The cells must have bounds for shape intersections to have much
+        # meaning, especially for shapes that are small compared to the
+        # grid size
+        xcoord, ycoord = util.cubes.get_xy_coords(cube)
+        if not xcoord.has_bounds():
+            xcoord.guess_bounds()
+        if not ycoord.has_bounds():
+            ycoord.guess_bounds()
+
+        # Extract bounding box
+        cube = util.cubes.extract_box(cube, self.shape.bounds)
+
+        # Mask points outside the actual shape
+        # Note we need to do the broadcasting manually: numpy is strangely
+        # reluctant to do it, no matter which of the many ways of creating
+        # a masked array we try
+        weights = util.cubes.get_intersection_weights(cube, self.shape, True)
+        mask = np.broadcast_to(weights == 0, cube.shape)
+        data = np.ma.array(cube.data, mask=mask)
+        cube = cube.copy(data=data)
+
+        self._cube = cube
+        return self._cube
