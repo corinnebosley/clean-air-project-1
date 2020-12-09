@@ -9,10 +9,10 @@ import pyproj
 
 # Cartopy classes corresponding to EPSG codes
 _CARTOPY_EPSG = {
-    4326: ccrs.Geodetic,
-    23032: ccrs.EuroPP,
-    27700: ccrs.OSGB,
-    29902: ccrs.OSNI,
+    4326: (ccrs.Geodetic, {}),
+    23032: (ccrs.EuroPP, {}),
+    27700: (ccrs.OSGB, {"approx": False}),
+    29902: (ccrs.OSNI, {"approx": False}),
 }
 
 # Map of proj4 projection names to appropriate classes
@@ -146,7 +146,8 @@ def as_cartopy_crs(crs):
     # or missing names, are taken into account.
     epsg = crs.to_epsg()
     if epsg in _CARTOPY_EPSG:
-        return _CARTOPY_EPSG[epsg]()
+        constructor, args = _CARTOPY_EPSG[epsg]
+        return constructor(**args)
 
     # Otherwise, we have the tedious task of converting proj4 parameters to
     # a cartopy class + parameters + globe parameters
@@ -169,6 +170,11 @@ def as_cartopy_crs(crs):
     if constructor is None:
         raise ValueError(f"Cannot handle projection '{proj_name}'")
 
+    # Special handling for spheres
+    r = params.pop("R", None)
+    if r is not None:
+        params["a"] = params["b"] = r
+
     # Split the parameters into those for the globe and those for the crs
     # Note: the sorting is specifically to guarantee that we handle lat_1
     # before lat_2, because they need to be put into an array in that order
@@ -189,10 +195,19 @@ def as_cartopy_crs(crs):
                 crs_params.setdefault(name, []).append(val)
             else:
                 crs_params[name] = val
-        elif key not in ("no_defs", "type", "units", "to_meter"):
+        elif key not in ("no_defs", "wktext", "type", "units", "to_meter"):
             unrecognised.append((key, val))
 
     if unrecognised:
         warnings.warn(f"Some parameters were not handled: {unrecognised}")
+
+    # Special handling for scale factors
+    # Cartopy refuses to accept both "scale_factor" and "latitude_true_scale",
+    # even if they match the defaults that proj4 defines.  Try to avoid it
+    # raising this error by removing these defaults.
+    if crs_params.get("latitude_true_scale") == 0:
+        crs_params.pop("latitude_true_scale")
+    if crs_params.get("scale_factor") == 1:
+        crs_params.pop("scale_factor")
 
     return constructor(**crs_params, globe=ccrs.Globe(**globe_params))
