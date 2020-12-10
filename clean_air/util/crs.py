@@ -4,8 +4,10 @@ Helper functions for dealing with coordinate reference systems.
 
 import warnings
 
+import numpy as np
 import cartopy.crs as ccrs
 import pyproj
+import shapely.ops
 
 # Cartopy classes corresponding to EPSG codes
 _CARTOPY_EPSG = {
@@ -211,3 +213,38 @@ def as_cartopy_crs(crs):
         crs_params.pop("scale_factor")
 
     return constructor(**crs_params, globe=ccrs.Globe(**globe_params))
+
+
+def _transformer_cartopy(source, target):
+    def transform(xs, ys):
+        tfpoints = target.transform_points(source, np.array(xs), np.array(ys))
+        # Cartopy gave us an array of shape (n, 3), but shapely expects output
+        # of the same type as the input, ie two lists of length n.
+        # A numpy array of shape (2, n) counts as two lists, so just need to
+        # drop the z coordinates and transpose.
+        return tfpoints[:, 0:2].T
+
+    return transform
+
+def _transformer_pyproj(source, target):
+    transformer = pyproj.Transformer.from_crs(source, target, always_xy=True)
+    return transformer.transform
+
+def transform_shape(shape, source, target):
+    # Determine an appropriate transformation function based on type
+    # If the CRSs are not compatible types, assume it is slightly more helpful
+    # to match the target, so convert the source
+    if isinstance(source, ccrs.CRS):
+        if isinstance(target, ccrs.CRS):
+            transformer = _transformer_cartopy(source, target)
+        else:
+            source = as_pyproj_crs()
+            transformer = _transformer_pyproj(source, target)
+    else:
+        if isinstance(target, ccrs.CRS):
+            source = as_cartopy_crs()
+            transformer = _transformer_cartopy(source, target)
+        else:
+            transformer = _transformer_pyproj(source, target)
+
+    return shapely.ops.transform(transformer, shape)
