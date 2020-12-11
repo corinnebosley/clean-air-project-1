@@ -44,6 +44,7 @@ def test_box_subset():
     assert iris.util.array_equal(ycoord.points, [-2000, 0, 2000, 4000])
 
 
+# noinspection PyUnresolvedReferences
 class TestPolygonSubset:
     def setup_class(self):
         # Define a test polygon (an extremely simple representation of Exeter)

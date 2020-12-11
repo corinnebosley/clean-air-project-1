@@ -2,7 +2,8 @@
 This module contains functions to convert between dataframe types.
 """
 
-from clean_air.util.cubes import get_xy_coords
+import cap.clean_air.util.cubes as cubes
+
 from iris.pandas import _assert_shared, _as_pandas_coord
 import numpy as np
 import pandas as pd
@@ -128,7 +129,7 @@ def convert_to_geodf(cube, restitch=False):
     if len(cube.dim_coords) >= 2:
         # If there are two or more coords, we need to look for standard
         # xy dimension coords and use them to slice the cube up:
-        x_coord, y_coord = get_xy_coords(cube)
+        x_coord, y_coord = cubes.get_xy_coords(cube)
         geodataframes = _make_geo(cube, x_coord, y_coord)
 
         # Now we have a set of 2D geopandas dataframes which must be

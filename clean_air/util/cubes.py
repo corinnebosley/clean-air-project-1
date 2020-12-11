@@ -79,6 +79,7 @@ def extract_box(cube, box):
     return cube
 
 
+# noinspection PyUnresolvedReferences
 def get_intersection_weights(cube, geom, match_cube_dims=False):
     """
     Calculate what proportion of each grid cell intersects a given shape.

@@ -1,9 +1,9 @@
 ##Data Visuliser Class to handle rendering of maps and plots##
 
-from .data_visuliser_interface import DataVisuliserInterface
+from .data_visualiser_interface import DataVisualiserInterface
 
 
-class DataVisuliser(DataVisuliserInterface):
+class DataVisuliser(DataVisualiserInterface):
     def __init__(self, *datasets):
         self.datasets = datasets #declare variable to hold a list of datasets
 

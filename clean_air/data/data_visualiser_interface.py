@@ -1,7 +1,7 @@
 ##Data Visuliser to handle rendering of maps and plots##
 ## Implement as interface to define API as this will be toplevel plug in from GUI
 
-class DataVisuliserInterface:
+class DataVisualiserInterface:
 
     def render_obs(self):
         pass

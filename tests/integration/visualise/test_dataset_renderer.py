@@ -2,9 +2,6 @@
 Integration tests for the test_dataset_renderer.py visualisations.
 """
 
-import clean_air.visualise.dataset_renderer as dr
-import os
-
 MODEL_DATA_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"
                    "model/")
 OBS_DATA_PATH = ("/net/home/h06/cbosley/Projects/toybox/cap_sample_data/"

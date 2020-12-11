@@ -25,6 +25,7 @@ class Map:
         # dashboards and widgets and stuff:
         # https://holoviz.org/tutorial/Building_Panels.html
         for gdf in self.gdfs:
+            print("rendering map...")
             gdf.hvplot.points(x=x_coord, y=y_coord, datashade=True, geo=True)
 
 
