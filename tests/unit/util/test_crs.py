@@ -2,8 +2,10 @@
 Unit tests for the util.crs submodule
 """
 
+import numpy as np
 import cartopy.crs as ccrs
 import pyproj
+import shapely.geometry
 import pytest
 
 from clean_air import util
@@ -64,3 +66,37 @@ def test_as_pyproj(source, target):
     # Check only proj4 parameters.  Pyproj can handle a lot more than proj4
     # can describe, so may have got some of those extra things wrong.
     assert converted.to_dict() == target.to_dict()
+
+
+class TestTransform():
+    def setup_class(self):
+        self.latlon_point = shapely.geometry.Point(-0.4, 51.5)
+        self.osgb_point = shapely.geometry.Point(511160, 179110)
+
+    def test_cartopy(self):
+        latlon = ccrs.Geodetic()
+        osgb = ccrs.OSGB(approx=False)
+        transformed = util.crs.transform_shape(self.latlon_point, latlon, osgb)
+        transformed = np.array(transformed).round(-1)
+        assert np.all(transformed == np.array(self.osgb_point))
+
+    def test_pyproj(self):
+        latlon = pyproj.CRS.from_epsg(4326)
+        osgb = pyproj.CRS.from_epsg(27700)
+        transformed = util.crs.transform_shape(self.latlon_point, latlon, osgb)
+        transformed = np.array(transformed).round(-1)
+        assert np.all(transformed == np.array(self.osgb_point))
+
+    def test_cartopy_to_pyproj(self):
+        latlon = ccrs.Geodetic()
+        osgb = pyproj.CRS.from_epsg(27700)
+        transformed = util.crs.transform_shape(self.latlon_point, latlon, osgb)
+        transformed = np.array(transformed).round(-1)
+        assert np.all(transformed == np.array(self.osgb_point))
+
+    def test_pyproj_to_cartopy(self):
+        latlon = pyproj.CRS.from_epsg(4326)
+        osgb = ccrs.OSGB(approx=False)
+        transformed = util.crs.transform_shape(self.latlon_point, latlon, osgb)
+        transformed = np.array(transformed).round(-1)
+        assert np.all(transformed == np.array(self.osgb_point))

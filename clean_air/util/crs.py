@@ -238,11 +238,11 @@ def transform_shape(shape, source, target):
         if isinstance(target, ccrs.CRS):
             transformer = _transformer_cartopy(source, target)
         else:
-            source = as_pyproj_crs()
+            source = as_pyproj_crs(source)
             transformer = _transformer_pyproj(source, target)
     else:
         if isinstance(target, ccrs.CRS):
-            source = as_cartopy_crs()
+            source = as_cartopy_crs(source)
             transformer = _transformer_cartopy(source, target)
         else:
             transformer = _transformer_pyproj(source, target)
