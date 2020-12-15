@@ -3,6 +3,7 @@ This module contains functions to convert between dataframe types.
 """
 
 import cap.clean_air.util.cubes as cubes
+import cap.clean_air.util.crs as crs
 
 from iris.pandas import _assert_shared, _as_pandas_coord
 import numpy as np
@@ -77,6 +78,8 @@ def _make_geo(cube, x_coord, y_coord):
     Returns:
         list of geodataframes
     """
+    crs = crs.as_pyproj_crs(cube.dim_coords.crs)
+
     dataframes = []
     for sub_cube in cube.slices([x_coord, y_coord], ordered=True):
         # Get the coordinates, data and geometry in the right
@@ -96,7 +99,8 @@ def _make_geo(cube, x_coord, y_coord):
         geo_df = GeoDataFrame({'x_coord': x_coords_pd,
                                'y_coord': y_coords_pd,
                                'data': data_pd,
-                               'geometry': geom})
+                               'geometry': geom,
+                               'crs': crs})
 
         dataframes.append(geo_df)
 
