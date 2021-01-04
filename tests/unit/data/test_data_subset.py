@@ -2,11 +2,13 @@ import os
 
 import numpy as np
 import iris
-import shapely
+import shapely, shapely.geometry
 
 from clean_air.data import DataSubset
+from clean_air import util
 
 SAMPLEDIR = os.path.expanduser("~cbosley/Projects/toybox/cap_sample_data")
+
 
 def test_point_subset():
     # Create example dataset
@@ -14,17 +16,16 @@ def test_point_subset():
         None,
         "aqum",
         os.path.join(SAMPLEDIR, "model", "aqum_daily*"),
-        latlon=(100, 200),
+        point=(100, 200),
     )
     cube = ds.as_cube()
 
-    # X and Y coords should now NOT be dim coords
-    xcoord = cube.coord(axis="x", dim_coords=False)
-    ycoord = cube.coord(axis="y", dim_coords=False)
+    xcoord, ycoord = util.cubes.get_xy_coords(cube)
 
     # Check we have the point we asked for
-    assert iris.util.array_equal(xcoord.points, [200])
-    assert iris.util.array_equal(ycoord.points, [100])
+    assert iris.util.array_equal(xcoord.points, [100])
+    assert iris.util.array_equal(ycoord.points, [200])
+
 
 def test_box_subset():
     # Create example dataset
@@ -36,12 +37,13 @@ def test_box_subset():
     )
     cube = ds.as_cube()
 
-    xcoord = cube.coord(axis="x", dim_coords=True)
-    ycoord = cube.coord(axis="y", dim_coords=True)
+    xcoord, ycoord = util.cubes.get_xy_coords(cube)
 
-    # Check we have the points we asked for
+    # Check we have the points we asked for (multiples of 2000m within
+    # each range)
     assert iris.util.array_equal(xcoord.points, [0, 2000])
     assert iris.util.array_equal(ycoord.points, [-2000, 0, 2000, 4000])
+
 
 class TestPolygonSubset:
     def setup_class(self):
